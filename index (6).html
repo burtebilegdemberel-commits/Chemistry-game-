@@ -1,0 +1,1782 @@
+<!doctype html>
+<html lang="mn" class="dark">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Химийн Адал Явдал - Дунд ангийн сургалтын апп</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            primary: '#06b6d4',
+                            secondary: '#a855f7',
+                            accent: '#f43f5e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Custom CSS -->
+  <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            touch-action: manipulation;
+        }
+
+        /* 3D Card Flip Styling */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Snake Board Styling */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(10, minmax(0, 1fr));
+            grid-template-rows: repeat(10, minmax(0, 1fr));
+        }
+
+        /* Dice Roll Animation */
+        @keyframes diceSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .animate-dice {
+            animation: diceSpin 0.3s linear infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(6, 182, 212, 0.8);
+        }
+    </style>
+ </head>
+ <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+  <!-- Header / Navbar -->
+  <header class="bg-slate-800/90 border-b border-slate-700 sticky top-0 z-40 backdrop-blur-md">
+   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
+      <i class="fa-solid font-bold fa-flask text-xl"></i>
+     </div>
+     <div>
+      <h1 class="text-xl font-extrabold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Химийн Адал Явдал</h1>
+      <p class="text-xs text-slate-400 hidden sm:block">Дунд ангийн сурагчдын интерактив хичээл</p>
+     </div>
+    </div>
+    <!-- Navigation Controls -->
+    <nav class="hidden md:flex items-center gap-2">
+     <button onclick="switchTab('quiz')" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition hover:bg-slate-700 flex items-center gap-2" id="nav-quiz"><i class="fa-solid fa-graduation-cap text-cyan-400"></i> Сорилт</button>
+     <button onclick="switchTab('textbook')" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition hover:bg-slate-700 flex items-center gap-2" id="nav-textbook"><i class="fa-solid fa-book-open text-emerald-400"></i> Ном</button>
+     <button onclick="switchTab('flashcard')" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition hover:bg-slate-700 flex items-center gap-2" id="nav-flashcard"><i class="fa-solid fa-layer-group text-amber-400"></i> Флаш Карт</button>
+     <button onclick="switchTab('game')" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition hover:bg-slate-700 flex items-center gap-2" id="nav-game"><i class="fa-solid fa-gamepad text-rose-400"></i> Могой Шат</button>
+    </nav>
+    <!-- Settings / Audio Controls -->
+    <div class="flex items-center gap-2">
+     <button onclick="toggleAudio()" id="audio-btn" title="Аудио асаах/унтраах text-slate-300" class="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 transition"><i class="fa-solid fa-volume-high text-cyan-400"></i></button>
+     <button onclick="toggleSettingsModal()" class="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 transition text-slate-300" title="Тохиргоо"><i class="fa-solid fa-gear"></i></button>
+    </div>
+   </div>
+   <!-- Mobile Navigation Bar -->
+   <div class="flex md:hidden border-t border-slate-700/60 justify-around p-2 bg-slate-800">
+    <button onclick="switchTab('quiz')" class="p-2 rounded-lg text-xs flex flex-col items-center gap-1 text-slate-300" id="m-nav-quiz"><i class="fa-solid fa-graduation-cap text-base text-cyan-400"></i> Сорил</button>
+    <button onclick="switchTab('textbook')" class="p-2 rounded-lg text-xs flex flex-col items-center gap-1 text-slate-300" id="m-nav-textbook"><i class="fa-solid fa-book-open text-base text-emerald-400"></i> Ном</button>
+    <button onclick="switchTab('flashcard')" class="p-2 rounded-lg text-xs flex flex-col items-center gap-1 text-slate-300" id="m-nav-flashcard"><i class="fa-solid fa-layer-group text-base text-amber-400"></i> Карт</button>
+    <button onclick="switchTab('game')" class="p-2 rounded-lg text-xs flex flex-col items-center gap-1 text-slate-300" id="m-nav-game"><i class="fa-solid fa-gamepad text-base text-rose-400"></i> Тоглоом</button>
+   </div>
+  </header>
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+   <!-- HOME TAB -->
+   <section id="tab-home" class="tab-content block space-y-8">
+    <!-- Hero Banner -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 p-8 sm:p-12 text-white shadow-2xl">
+     <div class="relative z-10 max-w-2xl space-y-4">
+      <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-md uppercase tracking-wider">Дунд сургуулийн химийн хөтөлбөр</span>
+      <h2 class="text-3xl sm:text-5xl font-black leading-tight">Химийн Ертөнцийг Интерактив Танин Мэдэхүйгээр Чимье!</h2>
+      <p class="text-slate-100 text-sm sm:text-base opacity-90 leading-relaxed">Атом, үелэх систем, химийн холбоос ба урвалыг хялбархан сурч, мэдлэгээ шалгах 5 түвшний сорилт бөгөөд "Могой Шат" тоглоомоор найзуудтайгаа өрсөлдөөрэй!</p>
+      <div class="flex flex-wrap gap-3 pt-2">
+       <button onclick="switchTab('quiz')" class="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold shadow-lg hover:bg-slate-100 transition transform hover:-translate-y-0.5"><i class="fa-solid fa-play mr-2 text-cyan-600"></i> Сорилт Эхлүүлэх</button>
+       <button onclick="switchTab('game')" class="px-6 py-3 bg-slate-900/40 border border-white/30 backdrop-blur-md text-white rounded-xl font-bold hover:bg-slate-900/60 transition"><i class="fa-solid fa-dice mr-2 text-rose-400"></i> Тоглоом Тоглох</button>
+      </div>
+     </div>
+     <div class="absolute -right-10 -bottom-10 opacity-20 text-white text-[220px] pointer-events-none font-bold">
+      <i class="fa-solid fa-atom"></i>
+     </div>
+    </div>
+    <!-- Features Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+     <!-- Card 1 -->
+     <div onclick="switchTab('quiz')" class="bg-slate-800 border border-slate-700/80 p-6 rounded-2xl hover:border-cyan-500/50 transition cursor-pointer group shadow-lg">
+      <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+       <i class="fa-solid fa-vial"></i>
+      </div>
+      <h3 class="text-lg font-bold mb-2 text-slate-100">5 Түвшний Сорил</h3>
+      <p class="text-sm text-slate-400">50+ баялаг асуулт бүхий дараалсан цоожтой түвшнүүд, дэлгэрэнгүй тайлбар.</p>
+     </div>
+     <!-- Card 2 -->
+     <div onclick="switchTab('textbook')" class="bg-slate-800 border border-slate-700/80 p-6 rounded-2xl hover:border-emerald-500/50 transition cursor-pointer group shadow-lg">
+      <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+       <i class="fa-solid fa-book-bookmark"></i>
+      </div>
+      <h3 class="text-lg font-bold mb-2 text-slate-100">Иж Бүрэн Ном</h3>
+      <p class="text-sm text-slate-400">Дөрвөн ангийн химийн үндсэн сэдвүүдийг хамарсан ойлгомжтой онол ба хайлт.</p>
+     </div>
+     <!-- Card 3 -->
+     <div onclick="switchTab('flashcard')" class="bg-slate-800 border border-slate-700/80 p-6 rounded-2xl hover:border-amber-500/50 transition cursor-pointer group shadow-lg">
+      <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+       <i class="fa-solid fa-clone"></i>
+      </div>
+      <h3 class="text-lg font-bold mb-2 text-slate-100">3D Флаш Карт</h3>
+      <p class="text-sm text-slate-400">Химийн нэр томьёо, томьёо, тодорхойлолтыг карт эргүүлж цээжлэх хэрэгсэл.</p>
+     </div>
+     <!-- Card 4 -->
+     <div onclick="switchTab('game')" class="bg-slate-800 border border-slate-700/80 p-6 rounded-2xl hover:border-rose-500/50 transition cursor-pointer group shadow-lg">
+      <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+       <i class="fa-solid fa-cubes"></i>
+      </div>
+      <h3 class="text-lg font-bold mb-2 text-slate-100">Могой Шат Тоглоом</h3>
+      <p class="text-sm text-slate-400">2-6 тоглогч, роботтой өрсөлдөх, химийн асуулттай шат, могойн саадтай хөлөг.</p>
+     </div>
+    </div>
+   </section>
+   <!-- QUIZ TAB -->
+   <section id="tab-quiz" class="tab-content hidden space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+     <div>
+      <h2 class="text-2xl font-bold text-slate-100">Химийн Сорилт ба Мэдлэгийн Түвшин</h2>
+      <p class="text-sm text-slate-400">Түвшин бүрт 70%-иас дээш амжилт үзүүлж дараагийн түвшнийг нээгээрэй!</p>
+     </div>
+     <button onclick="resetQuizProgress()" class="px-4 py-2 bg-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-600 transition text-rose-300"><i class="fa-solid fa-rotate-left mr-1"></i> Ахицыг шинэчлэх</button>
+    </div>
+    <!-- Level Selector / Dashboard -->
+    <div id="quiz-level-select" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <!-- Populated dynamically via JavaScript -->
+    </div>
+    <!-- Active Quiz Modal/Container -->
+    <div id="quiz-active-container" class="hidden bg-slate-800 rounded-3xl border border-slate-700 p-6 sm:p-8 space-y-6 shadow-2xl relative">
+     <!-- Progress Header -->
+     <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+      <div class="flex items-center gap-3">
+       <span id="quiz-level-badge" class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full font-bold text-xs">Түвшин 1</span>
+       <h3 id="quiz-title-text" class="font-bold text-lg text-slate-200">Атом &amp; Бодис</h3>
+      </div>
+      <button onclick="exitQuiz()" class="text-slate-400 hover:text-white text-sm font-semibold"><i class="fa-solid fa-xmark text-lg"></i> Гарах</button>
+     </div>
+     <!-- Progress Bar -->
+     <div class="space-y-1">
+      <div class="flex justify-between text-xs text-slate-400 font-semibold">
+       <span>Асуулт: <span id="quiz-q-num">1</span>/<span id="quiz-q-total">10</span></span> <span>Оноо: <span id="quiz-score">0</span></span>
+      </div>
+      <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+       <div id="quiz-progress-bar" class="bg-gradient-to-r from-cyan-500 to-purple-500 h-full w-0 transition-all duration-300"></div>
+      </div>
+     </div>
+     <!-- Question Box -->
+     <div class="space-y-4">
+      <h4 id="quiz-question-text" class="text-lg sm:text-xl font-bold text-slate-100 leading-snug"><!-- Dynamic Question --></h4>
+      <!-- Choices Grid -->
+      <div id="quiz-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+       <!-- Options populated via JS -->
+      </div>
+     </div>
+     <!-- Explanation Box -->
+     <div id="quiz-explanation-box" class="hidden bg-slate-900/80 border border-slate-700 p-4 rounded-xl space-y-2">
+      <div id="quiz-explanation-header" class="font-bold text-sm flex items-center gap-2">
+       <!-- Right/Wrong indicator -->
+      </div>
+      <p id="quiz-explanation-text" class="text-xs sm:text-sm text-slate-300 leading-relaxed"><!-- Explanation --></p>
+      <button id="quiz-next-btn" onclick="nextQuestion()" class="mt-3 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-sm rounded-xl hover:opacity-90 transition float-right">Дараагийн асуулт <i class="fa-solid fa-arrow-right ml-1"></i></button>
+     </div>
+    </div>
+   </section>
+   <!-- TEXTBOOK TAB -->
+   <section id="tab-textbook" class="tab-content hidden space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+     <div>
+      <h2 class="text-2xl font-bold text-slate-100">Цахим Ном &amp; Онолын Хичээл</h2>
+      <p class="text-sm text-slate-400">Дунд ангийн химийн үндсэн сэдвүүдийн дэлгэрэнгүй тайлбар</p>
+     </div>
+     <!-- Search Input -->
+     <div class="relative w-full md:w-72">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i> <input type="text" id="textbook-search" oninput="filterTextbook()" placeholder="Сэдэв, түлхүүр үгээр хайх..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+     </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+     <!-- Chapter Table of Contents Sidebar -->
+     <div class="lg:col-span-4 space-y-2" id="textbook-toc">
+      <!-- Dynamic Chapters Navigation -->
+     </div>
+     <!-- Main Chapter View -->
+     <div class="lg:col-span-8 bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-2xl min-h-[400px] space-y-6" id="textbook-content-view">
+      <!-- Dynamic Chapter Content -->
+     </div>
+    </div>
+   </section>
+   <!-- FLASHCARD TAB -->
+   <section id="tab-flashcard" class="tab-content hidden space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+     <div>
+      <h2 class="text-2xl font-bold text-slate-100">3D Интерактив Флаш Карт</h2>
+      <p class="text-sm text-slate-400">Карт дээр дарж эргүүлэн химийн нэр томьёог цээжлээрэй!</p>
+     </div>
+     <!-- Category Filter -->
+     <div class="flex flex-wrap gap-2" id="flashcard-filters">
+      <!-- Dynamic Categories -->
+     </div>
+    </div>
+    <!-- Flashcards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="flashcards-container">
+     <!-- Dynamic Flashcards -->
+    </div>
+   </section>
+   <!-- SNAKE & LADDERS GAME TAB -->
+   <section id="tab-game" class="tab-content hidden space-y-6">
+    <!-- Setup Container -->
+    <div id="game-setup" class="max-w-2xl mx-auto bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-3xl space-y-6 shadow-2xl">
+     <div class="text-center space-y-2">
+      <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400">Могой &amp; Шат: Химийн Аян</h2>
+      <p class="text-xs sm:text-sm text-slate-400">Хөлөг дээр урагшилж, асуултанд хариулан шатаар ахиж, могойноос болгоомжил!</p>
+     </div>
+     <!-- Player Count Selection -->
+     <div class="space-y-3">
+      <label class="block text-sm font-bold text-slate-300">Тоглогчдын тоо (2-6):</label>
+      <div class="flex gap-2">
+       <button onclick="setPlayerCount(2)" class="player-cnt-btn flex-1 py-2 bg-slate-700 rounded-xl font-bold hover:bg-slate-600 transition" id="pc-2">2 Тоглогч</button>
+       <button onclick="setPlayerCount(3)" class="player-cnt-btn flex-1 py-2 bg-slate-700 rounded-xl font-bold hover:bg-slate-600 transition" id="pc-3">3 Тоглогч</button>
+       <button onclick="setPlayerCount(4)" class="player-cnt-btn flex-1 py-2 bg-slate-700 rounded-xl font-bold hover:bg-slate-600 transition" id="pc-4">4 Тоглогч</button>
+      </div>
+     </div>
+     <!-- Player Setup List -->
+     <div class="space-y-4" id="player-setup-list">
+      <!-- Dynamic Player Setup Elements -->
+     </div>
+     <button onclick="startBoardGame()" class="w-full py-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white font-extrabold text-lg rounded-2xl shadow-lg hover:opacity-90 transition">Тоглоом Эхлүүлэх <i class="fa-solid fa-dice-five ml-2"></i></button>
+    </div>
+    <!-- Active Game Board Container -->
+    <div id="game-active" class="hidden flex flex-col lg:flex-row gap-6 items-start">
+     <!-- Board Left/Top -->
+     <div class="w-full lg:w-2/3 bg-slate-800 p-4 rounded-3xl border border-slate-700 relative shadow-2xl flex flex-col items-center">
+      <!-- SVG Overlay Board Container -->
+      <div class="relative w-full aspect-square max-w-[550px] bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden select-none" id="board-container">
+       <!-- Grid Tiles (10x10) -->
+       <div id="board-grid" class="board-grid w-full h-full">
+        <!-- 100 tiles generated dynamically -->
+       </div>
+       <!-- SVG Layer for Snakes & Ladders -->
+       <svg id="board-svg" class="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 1000 1000">
+        <!-- SVG elements drawn dynamically -->
+       </svg>
+       <!-- Player Tokens Container -->
+       <div id="tokens-layer" class="absolute inset-0 pointer-events-none z-20">
+        <!-- Tokens positioned absolute -->
+       </div>
+      </div>
+     </div>
+     <!-- Control Panel Right/Bottom -->
+     <div class="w-full lg:w-1/3 bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-6 shadow-2xl flex-1">
+      <!-- Current Turn Status -->
+      <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 flex items-center justify-between">
+       <div>
+        <span class="text-xs text-slate-400 font-semibold block">Одоогийн нүүдэл:</span> <span id="current-player-name" class="text-lg font-bold text-cyan-400">Тоглогч 1</span>
+       </div>
+       <div id="current-player-avatar" class="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center text-2xl shadow">🧪</div>
+      </div>
+      <!-- Dice & Action Controls -->
+      <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/80 text-center space-y-4">
+       <div class="flex justify-center items-center h-24">
+        <div id="dice-display" class="w-20 h-20 bg-gradient-to-tr from-slate-100 to-slate-300 rounded-2xl border-4 border-cyan-500 shadow-xl flex items-center justify-center text-4xl font-black text-slate-900 cursor-pointer hover:scale-105 transition" onclick="rollDice()">🎲</div>
+       </div>
+       <div class="flex gap-2">
+        <button id="roll-btn" onclick="rollDice()" class="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl shadow hover:opacity-90 transition">Шоо хаях</button>
+        <button id="extra-roll-btn" onclick="useExtraRollPrivilege()" class="px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow transition hidden" title="Нэг удаагийн дахин хаях эрх">⚡ Дахин хаях</button>
+       </div>
+       <p id="game-status-log" class="text-xs text-slate-400 font-medium italic min-h-[20px]">Шоо хаяж тоглоомоо эхлүүлнэ үү!</p>
+      </div>
+      <!-- Players Scoreboard -->
+      <div class="space-y-2">
+       <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Тоглогчид &amp; Байрлал</h4>
+       <div id="scoreboard-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+        <!-- Dynamic Leaderboard -->
+       </div>
+      </div>
+      <!-- Restart Game -->
+      <button onclick="exitBoardGame()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold rounded-xl transition">Тоглоом дуусгах</button>
+     </div>
+    </div>
+   </section>
+  </main>
+  <!-- MODALS SECTION -->
+  <!-- Question Modal for Ladder Challenge -->
+  <div id="ladder-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+   <div class="bg-slate-800 border border-slate-700 max-w-lg w-full rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+    <div class="flex items-center gap-3 border-b border-slate-700 pb-3">
+     <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">🪜</div>
+     <div>
+      <h3 class="text-lg font-bold text-slate-100">Шатаар ахих шалгалт!</h3>
+      <p class="text-xs text-slate-400">Зөв хариулж шатаар өгсөөрэй!</p>
+     </div>
+    </div>
+    <p id="ladder-question-text" class="text-sm sm:text-base font-semibold text-slate-200 leading-snug"><!-- Question --></p>
+    <div id="ladder-options-container" class="space-y-2">
+     <!-- Options -->
+    </div>
+   </div>
+  </div>
+  <!-- Celebration Victory Modal -->
+  <div id="victory-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+   <div class="bg-slate-800 border border-slate-700 max-w-md w-full rounded-3xl p-6 sm:p-8 text-center space-y-6 shadow-2xl relative">
+    <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-4xl shadow-lg">🏆</div>
+    <div class="space-y-2">
+     <h3 id="victory-title" class="text-2xl font-black text-slate-100">Баяр хүргэе!</h3>
+     <p id="victory-subtitle" class="text-sm text-slate-300">Та түвшнийг амжилттай давлаа!</p>
+    </div>
+    <button onclick="closeVictoryModal()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Үргэлжлүүлэх</button>
+   </div>
+  </div>
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+   <div class="bg-slate-800 border border-slate-700 max-w-md w-full rounded-3xl p-6 space-y-6 shadow-2xl relative">
+    <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+     <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-gear text-cyan-400 mr-2"></i>Тохиргоо</h3>
+     <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <!-- Theme Selection -->
+    <div class="space-y-3">
+     <label class="text-xs font-bold text-slate-400 uppercase">Загвар / Сэдэв</label>
+     <div class="grid grid-cols-3 gap-2">
+      <button onclick="setTheme('dark')" class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 hover:border-cyan-500">🌙 Шөнө</button>
+      <button onclick="setTheme('light')" class="p-3 bg-slate-200 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 hover:border-cyan-500">☀️ Өдөр</button>
+      <button onclick="setTheme('cyber')" class="p-3 bg-slate-950 border border-purple-500 rounded-xl text-xs font-bold text-purple-400 hover:border-purple-400">⚡ Кибер</button>
+     </div>
+    </div>
+    <!-- Audio Toggle -->
+    <div class="flex items-center justify-between pt-2">
+     <span class="text-sm font-semibold text-slate-200">Дууны эффект</span>
+     <button onclick="toggleAudio()" id="settings-audio-btn" class="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">Идэвхтэй</button>
+    </div>
+   </div>
+  </div>
+  <script>
+        /* ==========================================================================
+           AUDIO SYNTHESIZER (Web Audio API)
+           ========================================================================== */
+        let audioEnabled = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                if (type === 'dice') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'hop') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(150, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'snake') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'victory') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.1);
+                        osc.stop(now + idx * 0.1 + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not allowed or supported");
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-btn');
+            const sBtn = document.getElementById('settings-audio-btn');
+            if (audioEnabled) {
+                btn.innerHTML = `<i class="fa-solid fa-volume-high text-cyan-400"></i>`;
+                if(sBtn) sBtn.innerText = "Идэвхтэй";
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-volume-xmark text-slate-400"></i>`;
+                if(sBtn) sBtn.innerText = "Унтраастай";
+            }
+        }
+
+        /* ==========================================================================
+           QUIZ DATA & ENGINE (50+ Questions Across 5 Levels)
+           ========================================================================== */
+        const quizLevels = [
+            {
+                id: 1,
+                title: "Атом, Эгэл бөөмс & Бодис",
+                desc: "Атомын бүтэц, протон, нейтрон, электрон болон бодисын физик, химийн өөрчлөлт.",
+                icon: "fa-atom",
+                color: "from-cyan-500 to-blue-500",
+                questions: [
+                    {
+                        q: "Атомын цөмд ямар эгэл бөөмсүүд байрладаг вэ?",
+                        options: ["Зөвхөн электрон", "Протон ба Нейтрон", "Протон ба Электрон", "Нейтрон ба Электрон"],
+                        answer: 1,
+                        explain: "Атомын цөм нь эерэг цэнэгтэй протон болон цэнэггүй нейтроноос бүрдэнэ. Электрон нь цөмийг тойрон эргэдэг."
+                    },
+                    {
+                        q: "Электрон ямар цэнэгтэй вэ?",
+                        options: ["Эерэг (+)", "Сөрөг (-)", "Цэнэггүй (0)", "Хувьсах цэнэгтэй"],
+                        answer: 1,
+                        explain: "Электрон нь сөрөг (-) цэнэгтэй эгэл бөөм юм. Протон нь эерэг (+), нейтрон нь цэнэггүй байна."
+                    },
+                    {
+                        q: "Дараах бодисын өөрчлөлтүүдийн аль нь ХИМИЙН өөрчлөлт вэ?",
+                        options: ["Ус уурших", "Мөс хайлж ус болох", "Төмөр зэврэх", "Шил хагарах"],
+                        answer: 2,
+                        explain: "Төмөр зэврэхэд шинэ бодис (төмрийн оксид) үүсдэг тул химийн өөрчлөлт юм. Бусад нь физикийн өөрчлөлт."
+                    },
+                    {
+                        q: "Атомын дугаар (Z) юуг заадаг вэ?",
+                        options: ["Нейтроны тоо", "Протоны тоо", "Массын дугаар", "Давхаргын тоо"],
+                        answer: 1,
+                        explain: "Атомын дугаар (Z) нь тухайн атомын цөм дэх протоны тоог шууд илэрхийлдэг."
+                    },
+                    {
+                        q: "Бодисын төлөв байдлын өөрчлөлт (хайлш, ууршил) нь ямар үзэгдэл вэ?",
+                        options: ["Химийн үзэгдэл", "Физикийн үзэгдэл", "Цөмийн үзэгдэл", "Биологийн үзэгдэл"],
+                        answer: 1,
+                        explain: "Төлөв байдлын өөрчлөлтөд бодисын химийн бүтэц өөрчлөгдөхгүй тул физикийн үзэгдэл болно."
+                    },
+                    {
+                        q: "Байгаль дээр хамгийн хөнгөн элемент аль нь вэ?",
+                        options: ["Гели (He)", "Устөрөгч (H)", "Лити (Li)", "Хүүртөрөгч (O)"],
+                        answer: 1,
+                        explain: "Устөрөгч (H) нь хамгийн энгийн бүтэцтэй, ганц протонтой хамгийн хөнгөн элемент юм."
+                    },
+                    {
+                        q: "Протон ба нейтроны массуудын нийлбэрийг юу гэх вэ?",
+                        options: ["Атомын дугаар", "Массын тоо (A)", "Валент", "Молийн масса"],
+                        answer: 1,
+                        explain: "Массын тоо (A) = Протоны тоо + Нейтроны тоо юм."
+                    },
+                    {
+                        q: "Нэг элемент боловч нейтроны тоогоороо ялгаатай атомуудыг юу гэж нэрлэдэг вэ?",
+                        options: ["Изотоп", "Изобар", "Изомер", "Ион"],
+                        answer: 0,
+                        explain: "Протоны тоо адил боловч массын тоо (нейтроны тоо)-оор ялгаатай атомуудыг изотоп гэнэ."
+                    },
+                    {
+                        q: "Электрон алдсан эсвэл авсан цэнэгтэй бөөмийг юу гэж нэрлэдэг вэ?",
+                        options: ["Молекул", "Ион", "Атом", "Радикал"],
+                        answer: 1,
+                        explain: "Атом электрон алдвал эерэг ион (катион), электрон авбал сөрөг ион (анион) болно."
+                    },
+                    {
+                        q: "Дараах бодисуудын аль нь цэвэр бодис вэ?",
+                        options: ["Агаар", "Энгүй ус (H2O)", "Сүү", "Бензин"],
+                        answer: 1,
+                        explain: "Цэвэр ус (H2O) нь тодорхой тогтмол найрлагатай химийн нэгдэл буюу цэвэр бодис юм."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Үелэх Систем & Элементүүд",
+                desc: "Үелэх системийн үе, бүлэг, металл, металл биш ба гадаад давхаргын электрон.",
+                icon: "fa-table-cells",
+                color: "from-emerald-500 to-teal-500",
+                questions: [
+                    {
+                        q: "Үелэх системд босоо багануудыг юу гэж нэрлэдэг вэ?",
+                        options: ["Үе", "Бүлэг", "Давхарга", "Эрэмбэ"],
+                        answer: 1,
+                        explain: "Босоо багануудыг бүлэг гэх ба нэг бүлгийн элементүүд төстэй химийн шинж чанартай байдаг."
+                    },
+                    {
+                        q: "Үелэх системийн хэвтээ эгнээг юу гэж нэрлэдэг вэ?",
+                        options: ["Үе", "Бүлэг", "Хэвтээ талбар", "Катион"],
+                        answer: 0,
+                        explain: "Хэвтээ эгнээг үе гэх ба үеийн дугаар нь атомын электроны давхаргын тоог заана."
+                    },
+                    {
+                        q: "IA бүлгийн металлуудыг (Li, Na, K...) юу гэж нэрлэдэг вэ?",
+                        options: ["Идэвхигүй хий", "Галоген", "Шүлтийн металл", "Шүлтийн газрын металл"],
+                        answer: 2,
+                        explain: "IA бүлгийн элементүүд нь устай эрчимтэй урвалд орж шүлт үүсгэдэг тул шүлтийн металл гэнэ."
+                    },
+                    {
+                        q: "VIIA (17) бүлгийн элементүүдийг (F, Cl, Br, I) юу гэж нэрлэдэг вэ?",
+                        options: ["Галоген", "Инерт хий", "Металлоид", "Лантаноид"],
+                        answer: 0,
+                        explain: "VIIA бүлгийг Галоген (давс үүсгэгч) гэж нэрлэдэг."
+                    },
+                    {
+                        q: "Үелэх системийн VIIIА (18) бүлгийн элементүүдийн гол онцлог юу вэ?",
+                        options: ["Хамгийн идэвхитэй металл", "Бүрэн гүйцэд электронт давхаргатай, идэвхигүй хий", "Задалж болдоггүй", "Зөвхөн шингэн төлөвтэй"],
+                        answer: 1,
+                        explain: "Зажилт/Инерт хийнүүд нь гадаад электронт давхарга нь октет (8) дүүрсэн тул маш тогтвортой байдаг."
+                    },
+                    {
+                        q: "Натри (Na) элемент үелэх системийн аль бүлэгт байдаг вэ?",
+                        options: ["IA бүлэг", "IIA бүлэг", "VIIA бүлэг", "VIIIA бүлэг"],
+                        answer: 0,
+                        explain: "Натри (Na) нь 3-р үе, IA бүлэгт байрладаг шүлтийн металл юм."
+                    },
+                    {
+                        q: "Элементийн валентын электроны тоог юугаар тодорхойлдог вэ?",
+                        options: ["Үеийн дугаар", "Бүлгийн дугаар (үндсэн бүлэгт)", "Нейтроны тоо", "Атомын масс"],
+                        answer: 1,
+                        explain: "Үндсэн (A) бүлгийн элементүүдийн гадаад давхаргын буюу валентын электроны тоо нь бүлгийн дугаартайгаа адил байдаг."
+                    },
+                    {
+                        q: "Металл биш элементүүдийн цахилгаан сөрөг чанар ямар байдаг вэ?",
+                        options: ["Маш бага", "Өндөр", "Тэгтэй тэнцүү", "Үргэлж сөрөг"],
+                        answer: 1,
+                        explain: "Металл бишүүд нь электрон өөртөө татах чадвар буюу цахилгаан сөрөг чанар өндөртэй байдаг."
+                    },
+                    {
+                        q: "Үелэх системийн үеийн дагуу зүүнээс баруун тийш явахад атомын радиус хэрхэн өөрчлөгдөх вэ?",
+                        options: ["Ихэснэ", "Багасна", "Өөрчлөгдөхгүй", "Эхлээд багасаж дараа нь ихэснэ"],
+                        answer: 1,
+                        explain: "Цөмийн эерэг цэнэг нэмэгдэж электронуудыг өөртөө илүү хүчтэй татах тул атомын радиус багасна."
+                    },
+                    {
+                        q: "Дараах элементүүдийн аль нь металл биш вэ?",
+                        options: ["Төмөр (Fe)", "Хүчилтөрөгч (O)", "Кальци (Ca)", "Зэс (Cu)"],
+                        answer: 1,
+                        explain: "Хүчилтөрөгч (O) нь хийн төлөвт оршдог, металл биш элемент юм."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Химийн Холбоос & Молекул",
+                desc: "Ионы ба ковалент холбоос, валент чанар, химийн томьёо ба молекул масс.",
+                icon: "fa-link",
+                color: "from-amber-500 to-orange-500",
+                questions: [
+                    {
+                        q: "Металл ба металл биш элементийн хооронд үүсэх холбоосыг юу гэх вэ?",
+                        options: ["Ковалент холбоос", "Ионы холбоос", "Устөрөгчийн холбоос", "Металлын холбоос"],
+                        answer: 1,
+                        explain: "Электрон бүрэн шилжсэнээр үүсэх эерэг ба сөрөг ионы таталцлыг Ионы холбоос гэнэ."
+                    },
+                    {
+                        q: "Металл биш элементүүдийн дундаа эзэмших электроны хосоор үүсдэг холбоос юу вэ?",
+                        options: ["Ионы холбоос", "Ковалент холбоос", "Металлын холбоос", "Физикийн холбоос"],
+                        answer: 1,
+                        explain: "Электроноо дундаа хамтран эзэмших замаар ковалент холбоос үүсдэг."
+                    },
+                    {
+                        q: "Усны (H2O) молекул дахь химийн холбоосын төрөл аль нь вэ?",
+                        options: ["Туйлтай ковалент", "Туйлгүй ковалент", "Ионы холбоос", "Металлын холбоос"],
+                        answer: 0,
+                        explain: "H ба O-ийн цахилгаан сөрөг чанарын ялгаанаас болж электрон хос хүчилтөрөгч рүү хазайсан Туйлтай ковалент холбоос үүсдэг."
+                    },
+                    {
+                        q: "O2 (Хүчилтөрөгчийн молекул)-д ямар холбоос орших вэ?",
+                        options: ["Туйлтай ковалент", "Туйлгүй ковалент", "Ионы холбоос", "Металлын"],
+                        answer: 1,
+                        explain: "Ижил хоёр атомын хооронд электрон хос тэгш хуваарилагдах тул туйлгүй ковалент холбоос үүснэ."
+                    },
+                    {
+                        q: "Давсны хүчил (HCl) дээр устөрөгчийн валент чанар ямар байдаг вэ?",
+                        options: ["I", "II", "III", "IV"],
+                        answer: 0,
+                        explain: "Устөрөгч (H) нь ямагт 1 валенттай байдаг."
+                    },
+                    {
+                        q: "Усны (H2O) харьцангуй молекул масс (Mr) хэд вэ? (H=1, O=16)",
+                        options: ["17", "18", "32", "16"],
+                        answer: 1,
+                        explain: "Mr(H2O) = (1 * 2) + 16 = 18."
+                    },
+                    {
+                        q: "Нүүрсхүчлийн хийн (CO2) харьцангуй молекул масс хэд вэ? (C=12, O=16)",
+                        options: ["28", "44", "32", "56"],
+                        answer: 1,
+                        explain: "Mr(CO2) = 12 + (16 * 2) = 44."
+                    },
+                    {
+                        q: "NaCl (Хоолны давс) нэгдлийн химийн холбоос ямар холбоос вэ?",
+                        options: ["Ионы холбоос", "Ковалент холбоос", "Устөрөгчийн", "Металлын"],
+                        answer: 0,
+                        explain: "Na+ катион ба Cl- анионы хоорондын ионы таталцлаар ионы нэгдэл үүсдэг."
+                    },
+                    {
+                        q: "Атом электроноо өгөх эсвэл авах замаар гадаад давхаргаа 8 электронтой болгох дүрмийг юу гэх вэ?",
+                        options: ["Дуал дүрэм", "Октет дүрэм", "Авогадрогийн хууль", "Менделеевийн хууль"],
+                        answer: 1,
+                        explain: "Гадаад давхаргаа 8 электронтой тогтвортой байдалд хүргэхийг Октет дүрэм гэнэ."
+                    },
+                    {
+                        q: "Металл атомын гадаад давхаргын электронууд чөлөөтэй шилжин хөдөлж үүсгэдэг холбоосыг юу гэх вэ?",
+                        options: ["Ковалент", "Ионы", "Металлын холбоос", "Координацын"],
+                        answer: 2,
+                        explain: "Чөлөөт электроны 'хийн' орчинд металлын ионууд холбогдохыг металлын холбоос гэнэ."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Химийн Урвал & Уусмал",
+                desc: "Урвалын тэгшитгэл тэнцүүлэх, урвалын хэв шинж, хүчил, суурь ба pH хэмжээс.",
+                icon: "fa-flask-vial",
+                color: "from-purple-500 to-pink-500",
+                questions: [
+                    {
+                        q: "Химийн урвалын тэгшитгэлийн зүүн талд юу бичигддэг вэ?",
+                        options: ["Урвалын бүтээгдэхүүн", "Эх бодис (Реагент)", "Катализатор", "Давс"],
+                        answer: 1,
+                        explain: "Урвалын тэгшитгэлийн зүүн талд эх бодисууд (реагентууд), баруун талд үүссэн бүтээгдэхүүн бичигдэнэ."
+                    },
+                    {
+                        q: "Нэгдлийн урвал гэж ямар урвалыг хэлэх вэ?",
+                        options: ["Хоёр бодис задарч олон бодис үүсэх", "Хоёр ба түүнээс дээш бодис нэгдэж нэг бодис үүсэх", "Атом байр солилцох", "Төвийг сахирах"],
+                        answer: 1,
+                        explain: "Олон бодис хоорондоо нэгдэж ганц нийдмэл бодис үүсгэх урвалыг нэгдэх урвал гэнэ (A + B -> AB)."
+                    },
+                    {
+                        q: "Цэвэр усны pH утга хэдтэй тэнцүү байдаг вэ?",
+                        options: ["0", "7", "14", "1"],
+                        answer: 1,
+                        explain: "Цэвэр ус нь саармаг орчинтой тул pH = 7 байдаг."
+                    },
+                    {
+                        q: "pH утга 7-гоос бага (pH < 7) байвал ямар орчин бэ?",
+                        options: ["Суурилаг орчин", "Хүчилэг орчин", "Саармаг орчин", "Давслаг орчин"],
+                        answer: 1,
+                        explain: "pH < 7 байвал хүчиллэг, pH > 7 байвал суурилаг (шүлтлэг) орчныг заана."
+                    },
+                    {
+                        q: "Хүчил ба суурь урвалдаж давс ба ус үүсгэх урвалыг юу гэж нэрлэдэг вэ?",
+                        options: ["Задрах урвал", "Саармагжих урвал", "Исэлдэх урвал", " Шатах урвал"],
+                        answer: 1,
+                        explain: "Хүчил + Суурь -> Давс + Ус процессыг Саармагжих (төвийг сахирах) урвал гэнэ."
+                    },
+                    {
+                        q: "Лакмусын цаас хүчиллэг орчинд ямар өнгөтэй болдог вэ?",
+                        options: ["Хөх", "Улаан", "Ногоон", "Шар"],
+                        answer: 1,
+                        explain: "Лакмусын индикатор хүчилд улаан, суурьт хөх/цэнхэр өнгөтэй болдог."
+                    },
+                    {
+                        q: "Химийн урвалаар массын хадгалагдах хуулийг хэн нээсэн бэ?",
+                        options: ["Мэндэлеев", "Ломоносов ба Лавуазье", "Бойл", "Авогадро"],
+                        answer: 1,
+                        explain: "М.В.Ломоносов болон А.Лавуазье нар химийн урвалын өмнөх ба дараах масс тэнцүү байх хуулийг нээсэн."
+                    },
+                    {
+                        q: "Фенолфталеин индикатор суурилаг орчинд ямар өнгөтэй болдог вэ?",
+                        options: ["Өнгөгүй", "Улаан ягаан (Бөөрөлзгөнө)", "Шар", " Цэнхэр"],
+                        answer: 1,
+                        explain: "Фенолфталеин нь зөвхөн суурилаг (шүлтлэг) орчинд тод улаан ягаан өнгөтэй болдог."
+                    },
+                    {
+                        q: "Химийн урвалын хурдыг түргэсгэдэг боловч өөрөө урвалд зарцуулагддаггүй бодисыг юу гэх вэ?",
+                        options: ["Индикатор", "Катализатор", "Реагент", "Ингибитор"],
+                        answer: 1,
+                        explain: "Катализатор нь урвалын идэвхжилийн энергийг бууруулж урвалыг хурдасгадаг."
+                    },
+                    {
+                        q: "2H2 + O2 -> ? тэгшитгэлийн бүтээгдэхүүн юу вэ?",
+                        options: ["H2O2", "2H2O", "HO2", "H2O"],
+                        answer: 1,
+                        explain: "Устөрөгч ба хүчилтөрөгч шатаж ус үүсгэх тэгшитгэл тэнцүүлснээр 2H2O болно."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Тооцоолол, Эрдэмтэд ба Амьдрал",
+                desc: "Моль, тооцоолол, алдартай химичид ба байгаль орчны хими.",
+                icon: "fa-calculator",
+                color: "from-rose-500 to-red-500",
+                questions: [
+                    {
+                        q: "1 моль бодист байх жижиг хэсгийн тоог илэрхийлдэг Авогадрогийн тогтмол хэд вэ?",
+                        options: ["6.02 * 10^23", "3.00 * 10^8", "1.60 * 10^-19", "9.81"],
+                        answer: 0,
+                        explain: "Авогадрогийн тоо Na = 6.02 * 10^23 ширхэг/моль байдаг."
+                    },
+                    {
+                        q: "Бодисын хэмжээг (n) олох зөв формулыг сонгоно уу.",
+                        options: ["n = m / M", "n = m * M", "n = M / m", "n = m + M"],
+                        answer: 0,
+                        explain: "Бодисын хэмжээ моль (n) = Масс (m) / Молийн масс (M) юм."
+                    },
+                    {
+                        q: "Хэвийн нөхцөлд (STP) 1 моль хийн эзлэхүүн хэдэн литр байдаг вэ?",
+                        options: ["10.0 Л", "22.4 Л", "100 Л", "2.24 Л"],
+                        answer: 1,
+                        explain: "Хэвийн нөхцөлд (0°C, 1 атм) ямар ч хийн 1 моль нь 22.4 литр эзлэхүүн эзэлдэг."
+                    },
+                    {
+                        q: "Химийн элементүүдийн үеPeriodic хуулийг 1869 онд нээсэн эрдэмтэн хэн бэ?",
+                        options: ["Альберт Эйнштейн", "Дмитрий Менделеев", "Исаак Ньютон", "Мари Кюри"],
+                        answer: 1,
+                        explain: "Оросын агуу эрдэмтэн Д.И.Менделеев Химийн элементүүдийн үелэх хуулийг нээсэн."
+                    },
+                    {
+                        q: "Хүчлийн бороо үүсэхэд голлон нөлөөлдөг агаарын бохирдуулагч хий аль нь бэ?",
+                        options: ["SO2 ба NO2", "O2 ба N2", "He ба Ar", "CH4 ба H2"],
+                        answer: 0,
+                        explain: "Хүхрийн диоксид (SO2) ба азотын диоксид (NO2) нь агаарын чийгтэй урвалдаж хүчлийн бороо үүсгэдэг."
+                    },
+                    {
+                        q: "Дэлхийн агаар мандлын ойролцоогоор 78%-ийг ямар хий бүрдүүлдэг вэ?",
+                        options: ["Хүчилтөрөгч", "Азот (N2)", "Нүүрсхүчлийн хий", "Аргон"],
+                        answer: 1,
+                        explain: "Агаарын 78%-ийг Азот (N2), 21%-ийг Хүчилтөрөгч (O2) эзэлдэг."
+                    },
+                    {
+                        q: "36 грамм усанд (H2O) хэдэн моль ус агуулагдах вэ? (M = 18 г/моль)",
+                        options: ["1 моль", "2 моль", "3 моль", "0.5 моль"],
+                        answer: 1,
+                        explain: "n = m / M = 36г / 18 г/моль = 2 моль."
+                    },
+                    {
+                        q: "Нүүрсхүчлийн хийн (CO2) агаар мандалд ихсэх нь ямар сөрөг үр дагавартай вэ?",
+                        options: ["Озоны цоорхой", "Хүлэмжийн эффект ба дулаарал", "Хүчлийн бороо", "Радиоидэвхт бохирдол"],
+                        answer: 1,
+                        explain: "CO2 зэрэг хүлэмжийн хийнүүд дулааныг барьж дэлхийн дулааралд нөлөөлдөг."
+                    },
+                    {
+                        q: "Радиоидэвхит чанарыг нээж хоёр удаа Нобелийн шагнал хүртсэн эмэгтэй эрдэмтэн хэн бэ?",
+                        options: ["Розалинд Франклин", "Мари Кюри", "Ада Лавлейс", "Дороти Ходжкин"],
+                        answer: 1,
+                        explain: "Мари Кюри нь физик болон химийн салбарт хоёр удаа Нобелийн шагнал хүртсэн."
+                    },
+                    {
+                        q: "Ургамал нарны гэрэл ба CO2, H2O-ийг ашиглан глюкоз ба хүчилтөрөгч үүсгэх процессыг юу гэх вэ?",
+                        options: ["Исэлдэлт", "Фотосинтез", "Амьсгал", "Задрал"],
+                        answer: 1,
+                        explain: "Ургамал нарны гэрлийн энергиэр фотосинтез явуулж хүчилтөрөгч ба глюкоз үйлдвэрлэдэг."
+                    }
+                ]
+            }
+        ];
+
+        /* LocalStorage Progress Handling */
+        function getUnlockedLevel() {
+            return parseInt(localStorage.getItem('chem_unlocked_level') || '1');
+        }
+
+        function setUnlockedLevel(lvl) {
+            const current = getUnlockedLevel();
+            if (lvl > current) {
+                localStorage.setItem('chem_unlocked_level', lvl.toString());
+            }
+        }
+
+        function resetQuizProgress() {
+            if(confirm("Сорилын ахицыг шинэчлэх үү? Уншигдсан түвшнүүд дахин цоожлогдоно.")) {
+                localStorage.removeItem('chem_unlocked_level');
+                renderQuizDashboard();
+            }
+        }
+
+        /* Quiz State Variables */
+        let currentQuizLevel = null;
+        let currentQIndex = 0;
+        let quizScore = 0;
+        let selectedOptionIndex = null;
+
+        function renderQuizDashboard() {
+            const container = document.getElementById('quiz-level-select');
+            const unlocked = getUnlockedLevel();
+            container.innerHTML = '';
+
+            quizLevels.forEach((lvl) => {
+                const isUnlocked = lvl.id <= unlocked;
+                const card = document.createElement('div');
+                card.className = `p-6 rounded-3xl border transition shadow-lg relative overflow-hidden flex flex-col justify-between ${
+                    isUnlocked 
+                    ? 'bg-slate-800 border-slate-700 hover:border-cyan-500 cursor-pointer' 
+                    : 'bg-slate-900/60 border-slate-800 opacity-60 cursor-not-allowed'
+                }`;
+
+                card.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${lvl.color} flex items-center justify-center text-white text-xl shadow-lg">
+                                <i class="fa-solid ${lvl.icon}"></i>
+                            </span>
+                            ${isUnlocked 
+                                ? `<span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full"><i class="fa-solid fa-lock-open mr-1"></i> Нээлттэй</span>`
+                                : `<span class="px-3 py-1 bg-slate-700 text-slate-400 text-xs font-bold rounded-full"><i class="fa-solid fa-lock mr-1"></i> Цоожтой</span>`
+                            }
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-100">Түвшин ${lvl.id}: ${lvl.title}</h3>
+                            <p class="text-xs text-slate-400 mt-2 leading-relaxed">${lvl.desc}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-700/50 flex justify-between items-center">
+                        <span class="text-xs text-slate-400">${lvl.questions.length} Асуулт</span>
+                        ${isUnlocked 
+                            ? `<button onclick="startQuiz(${lvl.id})" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow transition">Эхлүүлэх</button>`
+                            : `<span class="text-xs text-slate-500">Түвшин ${lvl.id - 1}-ийг давна уу</span>`
+                        }
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function startQuiz(levelId) {
+            currentQuizLevel = quizLevels.find(l => l.id === levelId);
+            currentQIndex = 0;
+            quizScore = 0;
+            
+            document.getElementById('quiz-level-select').classList.add('hidden');
+            document.getElementById('quiz-active-container').classList.remove('hidden');
+
+            document.getElementById('quiz-level-badge').innerText = `Түвшин ${currentQuizLevel.id}`;
+            document.getElementById('quiz-title-text').innerText = currentQuizLevel.title;
+            document.getElementById('quiz-q-total').innerText = currentQuizLevel.questions.length;
+
+            loadQuestion();
+        }
+
+        function exitQuiz() {
+            document.getElementById('quiz-active-container').classList.add('hidden');
+            document.getElementById('quiz-level-select').classList.remove('hidden');
+            renderQuizDashboard();
+        }
+
+        function loadQuestion() {
+            selectedOptionIndex = null;
+            const qData = currentQuizLevel.questions[currentQIndex];
+
+            document.getElementById('quiz-q-num').innerText = currentQIndex + 1;
+            document.getElementById('quiz-score').innerText = quizScore;
+            
+            // Progress Bar
+            const pct = ((currentQIndex) / currentQuizLevel.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+            document.getElementById('quiz-question-text').innerText = `${currentQIndex + 1}. ${qData.q}`;
+
+            // Explanation box reset
+            document.getElementById('quiz-explanation-box').classList.add('hidden');
+
+            // Render options
+            const optsContainer = document.getElementById('quiz-options-container');
+            optsContainer.innerHTML = '';
+
+            const prefixes = ['A', 'B', 'C', 'D'];
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `opt-btn p-4 rounded-2xl border border-slate-700 bg-slate-900/60 hover:bg-slate-700 text-left transition flex items-center gap-3 text-sm font-semibold text-slate-200`;
+                btn.onclick = () => selectOption(idx);
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-800 text-cyan-400 font-bold flex items-center justify-center text-xs border border-slate-700 flex-shrink-0">${prefixes[idx]}</span>
+                    <span>${optText}</span>
+                `;
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(idx) {
+            if (selectedOptionIndex !== null) return; // Prevent re-selecting
+            selectedOptionIndex = idx;
+
+            const qData = currentQuizLevel.questions[currentQIndex];
+            const isCorrect = (idx === qData.answer);
+
+            if (isCorrect) {
+                quizScore += 10;
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            // Update UI styles
+            const btns = document.querySelectorAll('.opt-btn');
+            btns.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === qData.answer) {
+                    btn.classList.remove('bg-slate-900/60', 'border-slate-700');
+                    btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                } else if (i === idx && !isCorrect) {
+                    btn.classList.remove('bg-slate-900/60', 'border-slate-700');
+                    btn.classList.add('bg-rose-500/20', 'border-rose-500', 'text-rose-300');
+                }
+            });
+
+            // Show explanation
+            const expBox = document.getElementById('quiz-explanation-box');
+            const expHeader = document.getElementById('quiz-explanation-header');
+            const expText = document.getElementById('quiz-explanation-text');
+
+            expBox.classList.remove('hidden');
+            if (isCorrect) {
+                expHeader.className = "font-bold text-sm text-emerald-400 flex items-center gap-2";
+                expHeader.innerHTML = `<i class="fa-solid fa-circle-check"></i> Зөв хариуллаа! (+10 оноо)`;
+            } else {
+                expHeader.className = "font-bold text-sm text-rose-400 flex items-center gap-2";
+                expHeader.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Буруу хариуллаа!`;
+            }
+            expText.innerText = qData.explain;
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < currentQuizLevel.questions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            const totalQuestions = currentQuizLevel.questions.length;
+            const maxScore = totalQuestions * 10;
+            const percentage = (quizScore / maxScore) * 100;
+
+            const passPercentage = 70;
+            const passed = percentage >= passPercentage;
+
+            if (passed) {
+                playSound('victory');
+                setUnlockedLevel(currentQuizLevel.id + 1);
+                showVictoryModal(`Түвшин ${currentQuizLevel.id} Давлаа!`, `Баяр хүргэе! Та ${percentage}% гүйцэтгэлтэйгээр амжилттай давлаа. Дараагийн түвшин нээгдлээ!`);
+                if (window.confetti) {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+            } else {
+                playSound('wrong');
+                showVictoryModal(`Түвшин даваагүй!`, `Таньд ${percentage}% оноо олдлоо. Түвшин давахын тулд хамгийн багадаа 70% авсан байх шаардлагатай. Дахин оролдоорой!`);
+            }
+            exitQuiz();
+        }
+
+        function showVictoryModal(title, subtitle) {
+            document.getElementById('victory-title').innerText = title;
+            document.getElementById('victory-subtitle').innerText = subtitle;
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victory-modal').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           EXPANDED INTERACTIVE TEXTBOOK (НОМ)
+           ========================================================================== */
+        const textbookChapters = [
+            {
+                id: 1,
+                title: "1. Атом ба Эгэл бөөмсийн бүтэц",
+                icon: "fa-atom",
+                content: `
+                    <h3 class="text-2xl font-bold text-cyan-400 mb-4">Атом ба Эгэл бөөмсийн бүтэц</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Бодис бүхэн маш жижиг бөөмс болох <strong>Атом</strong>-оос бүрддэг. Атом нь төвдөө орших эерэг цэнэгтэй <strong>цөм</strong> болон түүнийг тойрон эргэх сөрөг цэнэгтэй <strong>электрон</strong>-оос бүрдэнэ.
+                    </p>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-3 mb-6">
+                        <h4 class="font-bold text-slate-200 text-sm">Атомын эгэл бөөмсүүд:</h4>
+                        <ul class="list-disc list-inside text-xs text-slate-300 space-y-2">
+                            <li><strong>Протон (p+):</strong> Цөмд байрладаг, эерэг (+) цэнэгтэй. Масс нь ойролцоогоор 1 а.м.н.</li>
+                            <li><strong>Нейтрон (n0):</strong> Цөмд байрладаг, цахилгаан цэнэггүй (0). Масс нь 1 а.м.н.</li>
+                            <li><strong>Электрон (e-):</strong> Цөмийн гадуур эргэлддэг, сөрөг (-) цэнэгтэй. Масс нь маш бага (1/1836 а.м.н).</li>
+                        </ul>
+                    </div>
+                    <h4 class="font-bold text-slate-200 text-base mb-2">Изотоп ба Массын Тоо</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Протоны тоо ба Нейтроны тооны нийлбэрийг <strong>Массын тоо (A)</strong> гэнэ. Протоны тоо нь ижил боловч нейтроны тоогоороо ялгаатай атомуудыг <strong>Изотоп</strong> гэж нэрлэдэг. Жишээ нь: Устөрөгчийн изотопууд болох Проти (1H), Детейри (2H), Трити (3H).
+                    </p>
+                `
+            },
+            {
+                id: 2,
+                title: "2. Үелэх систем ба Шинж чанар",
+                icon: "fa-table-cells",
+                content: `
+                    <h3 class="text-2xl font-bold text-emerald-400 mb-4">Үелэх систем ба Элементүүдийн Шинж чанар</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        1869 онд Д.И.Менделеев химийн элементүүдийг атомын массын өсөх дарааллаар жагсааж үелэх хуулийг нээжээ. Орчин үед элементүүдийг <strong>Атомын дугаар (Протоны тоо)</strong>-ынх нь өсөх дарааллаар байрлуулдаг.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                            <h4 class="font-bold text-emerald-400 text-sm mb-1">Үе (Хэвтээ эгнээ)</h4>
+                            <p class="text-xs text-slate-300">Нийт 7 үе байдаг. Үеийн дугаар нь атомын электроны бүрхүүлийн (давхаргын) тоог илэрхийлнэ.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                            <h4 class="font-bold text-emerald-400 text-sm mb-1">Бүлэг (Босоо багана)</h4>
+                            <p class="text-xs text-slate-300">Бүлгийн дугаар нь гадаад давхарга дэх валентын электроны тоог зааж, төстэй шинж чанарыг илэрхийлнэ.</p>
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-slate-200 text-base mb-2">Онцлог Бүлгүүд:</h4>
+                    <ul class="list-disc list-inside text-xs text-slate-300 space-y-1">
+                        <li><strong>IA бүлэг:</strong> Шүлтийн металлууд (Маш идэвхтэй, Li, Na, K...)</li>
+                        <li><strong>VIIA бүлэг:</strong> Галогенууд (Давс үүсгэгч, F, Cl, Br, I)</li>
+                        <li><strong>VIIIA бүлэг:</strong> Идэвхигүй / Инерт хийнүүд (He, Ne, Ar, Kr...)</li>
+                    </ul>
+                `
+            },
+            {
+                id: 3,
+                title: "3. Химийн Холбоос ба Бодисын Төлөв",
+                icon: "fa-link",
+                content: `
+                    <h3 class="text-2xl font-bold text-amber-400 mb-4">Химийн Холбоос ба Бодисын Төлөв</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Атомууд гадаад давхаргадаа 8 электронтой (октет) тогтвортой байдалд хүрэхийн тулд хоорондоо химийн холбоос үүсгэдэг.
+                    </p>
+                    <div class="space-y-3 mb-6">
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                            <h4 class="font-bold text-amber-400 text-sm">1. Ионы Холбоос</h4>
+                            <p class="text-xs text-slate-300 mt-1">Металл ба металл биш элементийн хооронд электрон шилжсэнээр үүсдэг. Эерэг ба сөрөг ионууд цахилгаан tĩnh хүчээр таталцана. Жишээ: NaCl.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                            <h4 class="font-bold text-amber-400 text-sm">2. Ковалент Холбоос</h4>
+                            <p class="text-xs text-slate-300 mt-1">Металл биш атомууд электроноо дундаа хамтран эзэмших замаар үүснэ. <em>Туйлтай</em> (H2O, HCl) ба <em>Туйлгүй</em> (O2, H2, N2) гэж ангилагдана.</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 4,
+                title: "4. Химийн Урвал ба Тэгшитгэл",
+                icon: "fa-vials",
+                content: `
+                    <h3 class="text-2xl font-bold text-purple-400 mb-4">Химийн Урвал ба Тэгшитгэл</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Нэг буюу хэд хэдэн бодис өөр шинж чанартай шинэ бодис болон хувирах процессыг <strong>Химийн урвал</strong> гэнэ.
+                    </p>
+                    <h4 class="font-bold text-slate-200 text-base mb-2">Химийн урвалын үндсэн 4 хэв шинж:</h4>
+                    <ol class="list-decimal list-inside text-xs text-slate-300 space-y-2 mb-6">
+                        <li><strong>Нэгдэх урвал:</strong> A + B -> AB (Жишээ: 2H2 + O2 -> 2H2O)</li>
+                        <li><strong>Задрах урвал:</strong> AB -> A + B (Жишээ: CaCO3 -> CaO + CO2)</li>
+                        <li><strong>Халах урвал:</strong> A + BC -> AC + B (Жишээ: Zn + 2HCl -> ZnCl2 + H2)</li>
+                        <li><strong>Тра солилцох урвал:</strong> AB + CD -> AD + CB</li>
+                    </ol>
+                `
+            },
+            {
+                id: 5,
+                title: "5. Хүчил, Суурь ба Давс",
+                icon: "fa-flask",
+                content: `
+                    <h3 class="text-2xl font-bold text-pink-400 mb-4">Хүчил, Суурь ба Давс</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Уусмалын хүчиллэг ба суурилаг чанарыг <strong>pH хэмжээс</strong>-ээр (0-ээс 14 хүртэл) хэмждэг.
+                    </p>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-3 mb-6">
+                        <div class="flex items-center gap-3">
+                            <span class="w-16 text-center py-1 bg-red-500/20 text-red-400 font-bold rounded text-xs">pH < 7</span>
+                            <span class="text-xs text-slate-300"><strong>Хүчиллэг орчин:</strong> Лакмусыг улаан болгоно. (HCl, H2SO4, нимбэгний шүүс)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-16 text-center py-1 bg-emerald-500/20 text-emerald-400 font-bold rounded text-xs">pH = 7</span>
+                            <span class="text-xs text-slate-300"><strong>Саармаг орчин:</strong> Цэвэр ус, хоолны давсны уусмал.</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-16 text-center py-1 bg-blue-500/20 text-blue-400 font-bold rounded text-xs">pH > 7</span>
+                            <span class="text-xs text-slate-300"><strong>Суурилаг / Шүлтлэг:</strong> Лакмусыг хөх болгоно. (NaOH, савангийн уусмал)</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 6,
+                title: "6. Уусмал ба Молийн Концентраци",
+                icon: "fa-droplet",
+                content: `
+                    <h3 class="text-2xl font-bold text-rose-400 mb-4">Уусмал ба Молийн Концентраци</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Уусмал нь уусгагч (ихэвчлэн ус) ба ууссан бодисоос бүрдэх нэг төрлийн систем юм.
+                    </p>
+                    <h4 class="font-bold text-slate-200 text-base mb-2">Үндсэн Формулууд:</h4>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-2 text-xs text-slate-300 mb-6">
+                        <p><strong>Бодисын массын үйлчлэл (ω%):</strong> ω = (m_ууссан / m_уусмал) * 100%</p>
+                        <p><strong>Молийн концентраци (C):</strong> C = n / V (моль/Л)</p>
+                    </div>
+                `
+            }
+        ];
+
+        let selectedChapterId = 1;
+
+        function renderTextbookTOC() {
+            const container = document.getElementById('textbook-toc');
+            container.innerHTML = '';
+
+            textbookChapters.forEach(ch => {
+                const isSelected = ch.id === selectedChapterId;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-4 rounded-xl border transition flex items-center gap-3 ${
+                    isSelected 
+                    ? 'bg-cyan-600/20 border-cyan-500 text-cyan-300 font-bold' 
+                    : 'bg-slate-800 border-slate-700/70 text-slate-300 hover:bg-slate-700/50'
+                }`;
+                btn.onclick = () => selectChapter(ch.id);
+                btn.innerHTML = `
+                    <i class="fa-solid ${ch.icon} text-lg"></i>
+                    <span class="text-sm">${ch.title}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function selectChapter(id) {
+            selectedChapterId = id;
+            renderTextbookTOC();
+            const ch = textbookChapters.find(c => c.id === id);
+            document.getElementById('textbook-content-view').innerHTML = ch.content;
+        }
+
+        function filterTextbook() {
+            const query = document.getElementById('textbook-search').value.toLowerCase();
+            const filtered = textbookChapters.filter(ch => 
+                ch.title.toLowerCase().includes(query) || ch.content.toLowerCase().includes(query)
+            );
+
+            if (filtered.length > 0) {
+                selectChapter(filtered[0].id);
+            }
+        }
+
+        /* ==========================================================================
+           3D FLIPPING FLASHCARDS (ФЛАШ КАРТ)
+           ========================================================================== */
+        const flashcardsData = [
+            { id: 1, cat: "Атом", term: "Атом", def: "Бодисыг бүрдүүлэгч химийн шинж чанарыг агуулсан хамгийн жижиг бөөм." },
+            { id: 2, cat: "Атом", term: "Протон", def: "Атомын цөмд орших эерэг (+) цэнэгтэй эгэл бөөм." },
+            { id: 3, cat: "Атом", term: "Электрон", def: "Атомын цөмийг тойрон эргэлдэх сөрөг (-) цэнэгтэй бөөм." },
+            { id: 4, cat: "Үелэх систем", term: "Үе", def: "Үелэх системийн хэвтээ эгнээ. Атомын электроны давхаргын тоог заана." },
+            { id: 5, cat: "Үелэх систем", term: "Бүлэг", def: "Үелэх системийн босоо багана. Гадаад давхаргын электроны тоог заана." },
+            { id: 6, cat: "Үелэх систем", term: "Шүлтийн металл", def: "Үелэх системийн IA бүлгийн маш идэвхтэй металлууд (Li, Na, K...)." },
+            { id: 7, cat: "Холбоос", term: "Ионы холбоос", def: "Металл ба металл биш ионуудын цахилгаан tĩnh таталцлаар үүсэх холбоос." },
+            { id: 8, cat: "Холбоос", term: "Ковалент холбоос", def: "Металл биш атомууд электроноо дундаа хамтран эзэмших холбоос." },
+            { id: 9, cat: "Урвал", term: "Катализатор", def: "Химийн урвалын хурдыг түргэсгэдэг боловч өөрөө зарцуулагддаггүй бодис." },
+            { id: 10, cat: "Хүчил", term: "pH Хэмжээс", def: "Уусмалын хүчиллэг эсвэл суурилаг чанарыг 0-14 хүртэл илэрхийлэх хэмжээс." },
+            { id: 11, cat: "Хүчил", term: "Индикатор", def: "Уусмалын орчноос (хүчил/суурь) хамаарч өнгөө өөрчилдөг бодис (Лакмус, Фенолфталеин)." },
+            { id: 12, cat: "Урвал", term: "Саармагжих урвал", def: "Хүчил ба суурь урвалдаж давс ба ус үүсгэх процесс." },
+            { id: 13, cat: "Атом", term: "Изотоп", def: "Протоны тоо адил боловч массын тоо (нейтрон)-оор ялгаатай атомууд." },
+            { id: 14, cat: "Үелэх систем", term: "Галоген", def: "VIIA бүлгийн маш идэвхтэй металл биш элементүүд (F, Cl, Br, I)." },
+            { id: 15, cat: "Холбоос", term: "Молийн масса", def: "1 моль бодисын граммаар илэрхийлэгдэх масс (г/моль)." }
+        ];
+
+        let selectedFlashcardCat = "Бүгд";
+
+        function renderFlashcardFilters() {
+            const categories = ["Бүгд", "Атом", "Үелэх систем", "Холбоос", "Урвал", "Хүчил"];
+            const container = document.getElementById('flashcard-filters');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isSelected = cat === selectedFlashcardCat;
+                btn.className = `px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    isSelected 
+                    ? 'bg-amber-500 text-slate-900 shadow' 
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`;
+                btn.onclick = () => {
+                    selectedFlashcardCat = cat;
+                    renderFlashcardFilters();
+                    renderFlashcards();
+                };
+                btn.innerText = cat;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderFlashcards() {
+            const container = document.getElementById('flashcards-container');
+            container.innerHTML = '';
+
+            const filtered = selectedFlashcardCat === "Бүгд" 
+                ? flashcardsData 
+                : flashcardsData.filter(f => f.cat === selectedFlashcardCat);
+
+            filtered.forEach(fc => {
+                const card = document.createElement('div');
+                card.className = "perspective-1000 h-48 cursor-pointer group";
+                card.onclick = () => {
+                    const inner = card.querySelector('.flashcard-inner');
+                    inner.classList.toggle('rotate-y-180');
+                    playSound('hop');
+                };
+
+                card.innerHTML = `
+                    <div class="flashcard-inner relative w-full h-full duration-500 transform-style-3d transition-transform">
+                        <!-- Front -->
+                        <div class="absolute inset-0 bg-slate-800 border-2 border-slate-700 rounded-3xl p-6 flex flex-col justify-between items-center text-center backface-hidden shadow-xl group-hover:border-amber-500/50 transition">
+                            <span class="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-slate-700 text-amber-400">${fc.cat}</span>
+                            <h3 class="text-xl font-black text-slate-100">${fc.term}</h3>
+                            <span class="text-[11px] text-slate-500 font-medium"><i class="fa-solid fa-rotate mr-1"></i> Эргүүлэхийн тулд дарна уу</span>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-amber-600 to-orange-600 rounded-3xl p-6 flex flex-col justify-between items-center text-center backface-hidden rotate-y-180 shadow-xl text-white">
+                            <span class="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-white/20 text-white">${fc.term}</span>
+                            <p class="text-xs sm:text-sm font-semibold leading-relaxed">${fc.def}</p>
+                            <span class="text-[10px] opacity-80"><i class="fa-solid fa-check mr-1"></i> Тодорхойлолт</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           10x10 SNAKE & LADDERS BOARD GAME (ТА БИТГИЙ УУРЛААРАЙ & МОГОЙ ШАТ)
+           ========================================================================== */
+        const boardAvatars = ['🧪', '🔬', '⚛️', '🧬', '🔥', '💎', '🤖', '🦊', '🚀', '🧙‍♂️', '🦸‍♂️', '👑'];
+        
+        // Snakes: Head -> Tail
+        const snakes = {
+            98: 78,
+            95: 56,
+            88: 24,
+            62: 18,
+            48: 26,
+            36: 6,
+            32: 10
+        };
+
+        // Ladders: Bottom -> Top
+        const ladders = {
+            4: 14,
+            9: 31,
+            20: 38,
+            28: 84,
+            40: 59,
+            51: 67,
+            63: 81,
+            71: 91
+        };
+
+        let numPlayers = 2;
+        let players = [];
+        let currentPlayerIdx = 0;
+        let isDiceRolling = false;
+        let pendingLadderMove = null;
+
+        function setPlayerCount(count) {
+            numPlayers = count;
+            document.querySelectorAll('.player-cnt-btn').forEach(b => b.classList.remove('bg-cyan-600', 'text-white'));
+            document.getElementById(`pc-${count}`).classList.add('bg-cyan-600', 'text-white');
+            renderPlayerSetupList();
+        }
+
+        function renderPlayerSetupList() {
+            const container = document.getElementById('player-setup-list');
+            container.innerHTML = '';
+
+            for (let i = 0; i < numPlayers; i++) {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900/80 p-4 rounded-2xl border border-slate-700 flex flex-col sm:flex-row items-center gap-3";
+                
+                const isAI = (i > 0);
+                const defaultName = isAI ? `Робот - ${i}` : `Тоглогч ${i + 1}`;
+                const defaultAvatar = boardAvatars[i % boardAvatars.length];
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <span class="w-7 h-7 rounded-lg bg-slate-800 text-xs font-bold flex items-center justify-center text-slate-300">${i + 1}</span>
+                        <select id="p-avatar-${i}" class="bg-slate-800 border border-slate-700 rounded-xl p-2 text-xl">
+                            ${boardAvatars.map((av, idx) => `<option value="${av}" ${idx === i ? 'selected' : ''}>${av}</option>`).join('')}
+                        </select>
+                    </div>
+                    <input type="text" id="p-name-${i}" value="${defaultName}" placeholder="Нэр" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-auto">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 self-end sm:self-center">
+                        <input type="checkbox" id="p-ai-${i}" ${isAI ? 'checked' : ''} class="rounded text-cyan-500">
+                        <span>Робот болох</span>
+                    </label>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function startBoardGame() {
+            players = [];
+            for (let i = 0; i < numPlayers; i++) {
+                const name = document.getElementById(`p-name-${i}`).value || `Тоглогч ${i + 1}`;
+                const avatar = document.getElementById(`p-avatar-${i}`).value;
+                const isAI = document.getElementById(`p-ai-${i}`).checked;
+
+                players.push({
+                    id: i,
+                    name: name,
+                    avatar: avatar,
+                    isAI: isAI,
+                    pos: 1, // Start at tile 1
+                    extraRollUsed: false
+                });
+            }
+
+            currentPlayerIdx = 0;
+            document.getElementById('game-setup').classList.add('hidden');
+            document.getElementById('game-active').classList.remove('hidden');
+
+            renderBoardTiles();
+            drawBoardSVG();
+            updateBoardState();
+
+            checkAITurn();
+        }
+
+        function exitBoardGame() {
+            document.getElementById('game-active').classList.add('hidden');
+            document.getElementById('game-setup').classList.remove('hidden');
+        }
+
+        /* Generate 100 tiles in Boustrophedon (snake/zigzag) order */
+        function renderBoardTiles() {
+            const grid = document.getElementById('board-grid');
+            grid.innerHTML = '';
+
+            for (let row = 9; row >= 0; row--) {
+                const isEvenRowFromBottom = (row % 2 === 0);
+                for (let col = 0; col < 10; col++) {
+                    let tileNum;
+                    if (isEvenRowFromBottom) {
+                        tileNum = row * 10 + col + 1;
+                    } else {
+                        tileNum = row * 10 + (9 - col) + 1;
+                    }
+
+                    const tile = document.createElement('div');
+                    const isEvenTile = (tileNum % 2 === 0);
+                    tile.id = `tile-${tileNum}`;
+                    tile.className = `relative flex items-center justify-center font-bold text-[10px] sm:text-xs select-none border border-slate-800 ${
+                        isEvenTile ? 'bg-slate-800/80 text-slate-400' : 'bg-slate-900/80 text-slate-500'
+                    }`;
+                    
+                    // Display tile number
+                    tile.innerHTML = `<span class="absolute top-0.5 left-1 opacity-60">${tileNum}</span>`;
+                    grid.appendChild(tile);
+                }
+            }
+        }
+
+        /* SVG Overlay for Snakes and Ladders */
+        function drawBoardSVG() {
+            const svg = document.getElementById('board-svg');
+            svg.innerHTML = '';
+
+            // Helper to get center coordinates of tile 1..100 in 1000x1000 viewport
+            function getTileCenter(tileNum) {
+                const zeroIdx = tileNum - 1;
+                const row = Math.floor(zeroIdx / 10);
+                const colInRow = zeroIdx % 10;
+                const isEvenRow = (row % 2 === 0);
+                const col = isEvenRow ? colInRow : 9 - colInRow;
+
+                const x = col * 100 + 50;
+                const y = (9 - row) * 100 + 50;
+                return { x, y };
+            }
+
+            // Draw Ladders
+            Object.entries(ladders).forEach(([start, end]) => {
+                const p1 = getTileCenter(parseInt(start));
+                const p2 = getTileCenter(parseInt(end));
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", p1.x);
+                line.setAttribute("y1", p1.y);
+                line.setAttribute("x2", p2.x);
+                line.setAttribute("y2", p2.y);
+                line.setAttribute("stroke", "#f59e0b"); // amber-500
+                line.setAttribute("stroke-width", "18");
+                line.setAttribute("stroke-dasharray", "10,8");
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("opacity", "0.85");
+                svg.appendChild(line);
+            });
+
+            // Draw Snakes
+            Object.entries(snakes).forEach(([start, end]) => {
+                const p1 = getTileCenter(parseInt(start)); // Head
+                const p2 = getTileCenter(parseInt(end));   // Tail
+
+                const midX = (p1.x + p2.x) / 2 + (p1.x > p2.x ? 60 : -60);
+                const midY = (p1.y + p2.y) / 2;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const d = `M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`;
+                path.setAttribute("d", d);
+                path.setAttribute("stroke", "#f43f5e"); // rose-500
+                path.setAttribute("stroke-width", "14");
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke-linecap", "round");
+                path.setAttribute("opacity", "0.85");
+                svg.appendChild(path);
+
+                // Snake Head Indicator Circle
+                const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                head.setAttribute("cx", p1.x);
+                head.setAttribute("cy", p1.y);
+                head.setAttribute("r", "16");
+                head.setAttribute("fill", "#f43f5e");
+                svg.appendChild(head);
+            });
+        }
+
+        /* Render Player Tokens on the board */
+        function updateBoardState() {
+            const tokensLayer = document.getElementById('tokens-layer');
+            tokensLayer.innerHTML = '';
+
+            players.forEach(p => {
+                const zeroIdx = p.pos - 1;
+                const row = Math.floor(zeroIdx / 10);
+                const colInRow = zeroIdx % 10;
+                const isEvenRow = (row % 2 === 0);
+                const col = isEvenRow ? colInRow : 9 - colInRow;
+
+                const xPct = col * 10 + 2;
+                const yPct = (9 - row) * 10 + 2;
+
+                const token = document.createElement('div');
+                token.className = "absolute w-[7%] h-[7%] rounded-full bg-slate-800 border-2 border-cyan-400 flex items-center justify-center text-xs sm:text-base shadow-lg transition-all duration-300 z-30";
+                token.style.left = `${xPct}%`;
+                token.style.top = `${yPct}%`;
+                token.innerText = p.avatar;
+                tokensLayer.appendChild(token);
+            });
+
+            // Update Turn UI
+            const curPlayer = players[currentPlayerIdx];
+            document.getElementById('current-player-name').innerText = curPlayer.name;
+            document.getElementById('current-player-avatar').innerText = curPlayer.avatar;
+
+            // Update Scoreboard List
+            const sbList = document.getElementById('scoreboard-list');
+            sbList.innerHTML = '';
+
+            players.forEach((p, idx) => {
+                const isTurn = (idx === currentPlayerIdx);
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+                    isTurn ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-slate-900/60 border-slate-700/60 text-slate-300'
+                }`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>${p.avatar}</span>
+                        <span>${p.name} ${p.isAI ? '🤖' : ''}</span>
+                    </div>
+                    <span class="font-bold text-amber-400">Байр: ${p.pos}/100</span>
+                `;
+                sbList.appendChild(div);
+            });
+
+            // Extra Roll Privilege button visibility
+            const extraBtn = document.getElementById('extra-roll-btn');
+            if (!curPlayer.isAI && !curPlayer.extraRollUsed) {
+                extraBtn.classList.remove('hidden');
+            } else {
+                extraBtn.classList.add('hidden');
+            }
+        }
+
+        function rollDice() {
+            if (isDiceRolling) return;
+            const p = players[currentPlayerIdx];
+
+            isDiceRolling = true;
+            document.getElementById('roll-btn').disabled = true;
+
+            const diceDisplay = document.getElementById('dice-display');
+            diceDisplay.classList.add('animate-dice');
+            playSound('dice');
+
+            setTimeout(() => {
+                diceDisplay.classList.remove('animate-dice');
+                const rollVal = Math.floor(Math.random() * 6) + 1;
+                
+                const diceEmojis = ['🎲', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                diceDisplay.innerText = diceEmojis[rollVal];
+
+                document.getElementById('game-status-log').innerText = `${p.name} шоогоор ${rollVal} буулгалаа!`;
+
+                movePlayerStepByStep(p, rollVal);
+            }, 800);
+        }
+
+        function useExtraRollPrivilege() {
+            const p = players[currentPlayerIdx];
+            if (p.extraRollUsed || isDiceRolling) return;
+
+            p.extraRollUsed = true;
+            document.getElementById('game-status-log').innerText = `${p.name} дахин шоо хаях эрхээ ашиглалаа!`;
+            rollDice();
+        }
+
+        function movePlayerStepByStep(player, steps) {
+            let stepsLeft = steps;
+
+            const interval = setInterval(() => {
+                if (stepsLeft > 0 && player.pos < 100) {
+                    player.pos++;
+                    stepsLeft--;
+                    playSound('hop');
+                    updateBoardState();
+                } else {
+                    clearInterval(interval);
+                    checkTileLanding(player);
+                }
+            }, 300);
+        }
+
+        function checkTileLanding(player) {
+            const currentPos = player.pos;
+
+            // Reached 100 -> Victory!
+            if (currentPos >= 100) {
+                playSound('victory');
+                showVictoryModal(`${player.name} Яллаа!`, `Баяр хүргэе! ${player.avatar} хөлгийн 100 дахь нүдэнд түрүүлж хүрлээ!`);
+                isDiceRolling = false;
+                document.getElementById('roll-btn').disabled = false;
+                return;
+            }
+
+            // Check Ladder
+            if (ladders[currentPos]) {
+                pendingLadderMove = { player: player, target: ladders[currentPos] };
+                triggerLadderChallenge(player);
+                return;
+            }
+
+            // Check Snake
+            if (snakes[currentPos]) {
+                const tailPos = snakes[currentPos];
+                playSound('snake');
+                document.getElementById('game-status-log').innerText = `Аяа! ${player.name} могойнд баригдаж ${tailPos} нүд рүү гулслаа!`;
+                
+                setTimeout(() => {
+                    player.pos = tailPos;
+                    updateBoardState();
+                    finishTurn();
+                }, 800);
+                return;
+            }
+
+            finishTurn();
+        }
+
+        /* Trigger Question Modal on Ladder landing */
+        function triggerLadderChallenge(player) {
+            playSound('hop');
+            const modal = document.getElementById('ladder-modal');
+            const qText = document.getElementById('ladder-question-text');
+            const optsContainer = document.getElementById('ladder-options-container');
+
+            // Pick random question from level 1-3
+            const allQ = [...quizLevels[0].questions, ...quizLevels[1].questions, ...quizLevels[2].questions];
+            const randQ = allQ[Math.floor(Math.random() * allQ.length)];
+
+            qText.innerText = `${player.name}-д зориулсан шатны асуулт: ${randQ.q}`;
+            optsContainer.innerHTML = '';
+
+            randQ.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 bg-slate-900 border border-slate-700 hover:border-amber-500 rounded-xl text-left text-xs font-semibold text-slate-200 transition";
+                btn.onclick = () => answerLadderChallenge(idx === randQ.answer);
+                btn.innerText = opt;
+                optsContainer.appendChild(btn);
+            });
+
+            if (player.isAI) {
+                // AI auto answer after 1.5s
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    const isCorrect = Math.random() < 0.7; // 70% accuracy
+                    answerLadderChallenge(isCorrect);
+                }, 1500);
+            } else {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function answerLadderChallenge(isCorrect) {
+            document.getElementById('ladder-modal').classList.add('hidden');
+            const player = pendingLadderMove.player;
+
+            if (isCorrect) {
+                playSound('correct');
+                document.getElementById('game-status-log').innerText = `Зөв хариуллаа! ${player.name} шатаар өгсөж ${pendingLadderMove.target} нүдэнд хүрлээ!`;
+                player.pos = pendingLadderMove.target;
+            } else {
+                playSound('wrong');
+                document.getElementById('game-status-log').innerText = `Буруу хариуллаа! ${player.name} шатны доор үлдлээ.`;
+            }
+
+            pendingLadderMove = null;
+            updateBoardState();
+            finishTurn();
+        }
+
+        function finishTurn() {
+            isDiceRolling = false;
+            document.getElementById('roll-btn').disabled = false;
+
+            // Next player index
+            currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+            updateBoardState();
+
+            checkAITurn();
+        }
+
+        function checkAITurn() {
+            const curPlayer = players[currentPlayerIdx];
+            if (curPlayer.isAI) {
+                document.getElementById('roll-btn').disabled = true;
+                setTimeout(() => {
+                    rollDice();
+                }, 1200);
+            }
+        }
+
+        /* ==========================================================================
+           SETTINGS & NAVIGATION CONTROLS
+           ========================================================================== */
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            // Reset navbar active styles
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-slate-700', 'text-cyan-400'));
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) activeNav.classList.add('bg-slate-700', 'text-cyan-400');
+        }
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function setTheme(theme) {
+            const body = document.body;
+            body.classList.remove('dark', 'bg-slate-900', 'bg-slate-100', 'bg-slate-950');
+
+            if (theme === 'dark') {
+                body.classList.add('dark', 'bg-slate-900', 'text-slate-100');
+            } else if (theme === 'light') {
+                body.classList.add('bg-slate-100', 'text-slate-900');
+            } else if (theme === 'cyber') {
+                body.classList.add('dark', 'bg-slate-950', 'text-cyan-300');
+            }
+        }
+
+        window.onload = function() {
+            // Render default components
+            renderQuizDashboard();
+            renderTextbookTOC();
+            selectChapter(1);
+            renderFlashcardFilters();
+            renderFlashcards();
+            setPlayerCount(2);
+
+            // Setup default navigation tab
+            switchTab('home');
+        };
+    </script>
+ </body>
+</html>
